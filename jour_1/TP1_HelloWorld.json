@@ -1,0 +1,117 @@
+{
+  "name": "TP1_HelloWorld",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ff61b878-79a0-4256-81ad-f06959ba576d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30ef156d-df32-40b6-a4e8-249983d788ec",
+              "name": "nom",
+              "value": "CASTEL",
+              "type": "string"
+            },
+            {
+              "id": "85e5be25-9b8b-44e8-a033-6aef8b5c9f3d",
+              "name": "prenom",
+              "value": "Maxime",
+              "type": "string"
+            },
+            {
+              "id": "60d3093e-512e-4409-afdf-42d4d005e108",
+              "name": "message",
+              "value": "Bienvenue dans l'automatisation avec n8n !",
+              "type": "string"
+            },
+            {
+              "id": "295c6edb-ede2-4240-8cf4-8f2450b38ed2",
+              "name": "date",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "06647c7f-3598-40e2-bb19-32f52816af5b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d56c9c0-4c1a-4ca9-a750-20a85b87c768",
+              "name": "message_complet",
+              "value": "=Bonjour {{ $json.prenom }} {{ $json.nom }}, {{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "dde42d96-5414-4bbe-80a5-11ad973117ad",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "cb6b376f-1a9f-4f76-a032-3030838eb98e",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "dqk5Lv9cR8y619ek",
+  "tags": []
+}

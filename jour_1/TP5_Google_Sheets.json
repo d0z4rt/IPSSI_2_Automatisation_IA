@@ -1,0 +1,283 @@
+{
+  "name": "TP5_Google_Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enregistrer-contact",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        0
+      ],
+      "id": "7eb0d13e-5c97-4a13-9b15-f8e70fbaedb6",
+      "name": "Webhook",
+      "webhookId": "896ac8ab-d6e5-4949-90ad-39aa3d133eb3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"date\" : \"{{ $now.format('DD/MM/yyyy HH:mm') }}\",\n\"nom\" : \"{{ $json.body.nom }}\",\n\"email\" : \"{{ $json.body.email }}\",\n\"commentaire\" : \"{{ $json.body.commentaire }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "f997d67c-f4ec-439f-b13a-108c36f21b18",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg",
+          "mode": "list",
+          "cachedResultName": "TP_n8n_Jour1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $json.date }}",
+            "Nom": "={{ $json.nom }}",
+            "Email": "={{ $json.email }}",
+            "Commentaire": "={{ $json.commentaire }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nom",
+              "displayName": "Nom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Commentaire",
+              "displayName": "Commentaire",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        0
+      ],
+      "id": "430c0b34-3cd6-43bc-8f64-26b231821008",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HhjCkf7BHHWe3kqA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg",
+          "mode": "list",
+          "cachedResultName": "TP_n8n_Jour1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14K7KTdjXjCky6kvG95FClQUT5ua-m3EwW0j9Tkzgrzg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        112,
+        0
+      ],
+      "id": "a0ec242b-4f0c-4fc8-bc14-4f3b8bfe3b8a",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HhjCkf7BHHWe3kqA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"date\" : \"{{ $now.format('DD/MM/yyyy HH:mm') }}\",\n\"nom\" : \"{{ $('Edit Fields').item.json.nom }}\",\n\"email\" : \"{{ $('Edit Fields').item.json.email }}\",\n\"commentaire\" : \"{{ $('Edit Fields').item.json.commentaire }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -112
+      ],
+      "id": "cd77db5d-f11e-42c6-a969-1a989f0dee71",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "02e982d2-9c8d-4856-9312-86b58965f869",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        0
+      ],
+      "id": "32295afe-5479-44d1-99e2-d106c5c5d219",
+      "name": "is empty"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "is empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is empty": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b4f360fd-c88c-4525-9ff2-9c792afd1fbd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "Qo47ds5o6jN8vQIg",
+  "tags": []
+}

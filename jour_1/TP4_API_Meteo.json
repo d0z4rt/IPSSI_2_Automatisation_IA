@@ -1,0 +1,190 @@
+{
+  "name": "TP4_API_Meteo",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        0
+      ],
+      "id": "28819c83-dd46-44e0-a9f0-e4b0a100036e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "968d3478-402a-43b2-a14f-9714ab3a1964",
+              "name": "ville",
+              "value": "Madrid",
+              "type": "string"
+            },
+            {
+              "id": "ffd6461c-3f9a-4c61-9db7-31c3d63d2274",
+              "name": "pays",
+              "value": "ES",
+              "type": "string"
+            },
+            {
+              "id": "80734c1f-b7a8-4d98-b46d-4f7e98820ac5",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "0cd0e33a-4b59-4de5-9d73-184d5749910a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $json.results[0].latitude }}&longitude={{ $json.results[0].longitude }}&current_weather=true",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "10eea360-d71a-4ae3-94a7-1a90a4c55b12",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"temperature\" : \"{{ $json.current_weather.temperature }}\",\n\"vitesse_vent\" : \"{{ $json.current_weather.windspeed }}\",\n\"code_meteo\" : \"{{ $json.current_weather.weathercode }}\",\n\"heure_releve\" : \"{{ $json.current_weather.time }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        64
+      ],
+      "id": "d0439054-200e-43ab-95ae-b405f723080e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const weatherCodes = { 0: \"Ciel dégagé\", 1: \"Principalement dégagé\", 2:\n\"Partiellement nuageux\", 3: \"Couvert\", 45: \"Brouillard\", 51: \"Bruine légère\",\n61: \"Pluie légère\", 63: \"Pluie modérée\", 65: \"Pluie forte\", 71: \"Neige légère\", 95: \"Orage\" }; \nconst ville = $('Edit Fields').first().json.ville\nconst data = $input.first().json; \nconst description =\nweatherCodes[data.code_meteo] || \"Conditions inconnues\";\nconst isHot = Number.parseFloat(data.temperature) > 25 ? \"Il fait chaud\" : \"\"\nreturn { json: {\nville, temperature: `${data.temperature}°C`, vent:\n`${data.vitesse_vent} km/h`, conditions: description, heure:\ndata.heure_releve, message: `À ${ville}, il fait ${data.temperature}°C avec\n${description.toLowerCase()}. ${isHot}` } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "08338cb9-9d88-43d5-bacd-940cdbc67262",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "=https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ $json.ville }}"
+            },
+            {
+              "name": "countryCode",
+              "value": "={{ $json.pays }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "f9481a2c-58eb-486d-851a-d8d185dac9d1",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "34843907-3c10-4e13-b574-c8c9e9e03432",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "eDxLoEqgGmMQU41r",
+  "tags": []
+}

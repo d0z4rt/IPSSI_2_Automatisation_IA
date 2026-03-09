@@ -1,0 +1,90 @@
+{
+  "name": "TP2_Schedule_Quotidien",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a19ec632-6e5c-45d3-9069-03cc4653f942",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"date_rapport\" : \"{{ $now.format('DD/MM/yyyy') }}\",\n\"heure_rapport\" : \"{{ $now.format('HH:mm:ss') }}\",\n\"jour_semaine\" : \"{{ $now.weekdayLong }}\",\n\"numero_jour\" : \"{{ $now.ordinal }}\",\n\"message\" : \"Rapport quotidien généré automatiquement\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fa8cc314-fef4-4af2-a6a4-5515a4771cd7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst rapport = { metadata: { date: $input.first().json.date_rapport, heure:\n$input.first().json.heure_rapport, jour: $input.first().json.jour_semaine },\nstatistiques: { execution_numero: $input.first().json.numero_jour, status:\n\"success\" }, message: $input.first().json.message }; return { json: rapport };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c53ba6fd-bd83-49cb-8268-b30e005b3a47",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "82968f8d-fe02-4f1b-a4b4-56aa507e1e4d",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "0skSwqRnx83hJbuW",
+  "tags": []
+}
