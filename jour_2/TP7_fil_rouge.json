@@ -1,0 +1,706 @@
+{
+  "name": "TP7_fil_rouge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "candidatures",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -384,
+        -48
+      ],
+      "id": "83ddc277-c4bd-4e0a-949e-c49ac6d1cce6",
+      "name": "Webhook",
+      "webhookId": "43bf8082-baf6-42ad-9441-da9a922c55d3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "22a6ce13-c388-408a-a121-4c9ee7146786",
+              "name": "nom",
+              "value": "={{ $json.body.nom }}",
+              "type": "string"
+            },
+            {
+              "id": "3fb7fb60-a832-4b0f-9529-7209d456f7de",
+              "name": "prenom",
+              "value": "={{ $json.body.prenom }}",
+              "type": "string"
+            },
+            {
+              "id": "d5f95b3c-a945-4d77-b63c-8a870e6f46cd",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "a61cf40a-c2a1-422d-8495-2afb67828760",
+              "name": "telephone",
+              "value": "={{ $json.body.telephone }}",
+              "type": "string"
+            },
+            {
+              "id": "c73dd11b-afad-42d7-a057-425bd5105caf",
+              "name": "poste_souhaite",
+              "value": "={{ $json.body.poste_souhaite }}",
+              "type": "string"
+            },
+            {
+              "id": "2a7ed9b7-e0eb-43a0-bd8c-eb883e4bc6e1",
+              "name": "annees_experience",
+              "value": "={{ $json.body.annees_experience }}",
+              "type": "number"
+            },
+            {
+              "id": "7cb18736-f4e3-4754-b008-b866d7342dae",
+              "name": "cv_url",
+              "value": "={{ $json.body.cv_url }}",
+              "type": "string"
+            },
+            {
+              "id": "869fede9-d76e-4490-a816-bf91f956ec3b",
+              "name": "lettre_motivation",
+              "value": "={{ $json.body.lettre_motivation }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        -48
+      ],
+      "id": "b312a751-5292-457f-8bc1-b84b654848bf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const candidature = $input.item.json;\nconst erreurs = [];\n\n// Vérification des champs obligatoires\nconst champsObligatoires = ['nom', 'prenom', 'email', 'telephone', 'poste_souhaite', 'annees_experience'];\nchampsObligatoires.forEach(champ => {\n  if (!candidature[champ] && candidature[champ] !== 0) {\n    erreurs.push(`Champ manquant : ${champ}`);\n  }\n});\n\n// Validation email\nconst emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;\nif (candidature.email && !emailRegex.test(candidature.email)) {\n  erreurs.push('Format email invalide');\n}\n// Validation années d'expérience\nif (candidature.annees_experience && isNaN(parseInt(`${candidature.annees_experience}`))) {\n  erreurs.push('annees_experience doit être un nombre');\n}\n\nif (erreurs.length > 0) {\n  return {\n    json: {\n      valide: false,\n      erreurs: erreurs,\n      data: candidature,\n      timestamp: new Date().toISOString()\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...candidature,\n    annees_experience: parseInt(`${candidature.annees_experience}`)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -48
+      ],
+      "id": "27178c75-6a0c-43c7-a571-1b4df9ec6437",
+      "name": "validate"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $input.item.json;\nconst exp = data.annees_experience;\n\nlet scoreExp = 0;\nif (exp < 5) scoreExp = 20;\nelse if (exp >= 5 && exp < 10) scoreExp = 40;\nelse if (exp >= 10) scoreExp = 60;\n\nconst scoreLettre = data.lettre_motivation ? 20 : 0;\nconst scoreCV = data.cv_url ? 20 : 0;\n\nconst score = scoreExp + scoreLettre + scoreCV;\n\nlet categorie = '';\nlet equipe = '';\nif (score >= 70) {\n  categorie = 'Candidat prioritaire';\n  equipe = 'RH Senior';\n} else if (score >= 40) {\n  categorie = 'Candidat à évaluer';\n  equipe = 'RH Junior';\n} else {\n  categorie = 'Candidat en attente';\n  equipe = 'Base de données';\n}\n\nreturn {\n  json: {\n    ...data,\n    categorie,\n    equipe,\n    score\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -32
+      ],
+      "id": "e648cbdb-3524-4279-b76a-d6b139b6c61d",
+      "name": "scoring"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 70,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    },
+                    "id": "6cb17bbe-8666-4970-9e1e-89079e14fed3"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "33e92612-51a7-4340-81e0-622383014fe4",
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 40,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "749dd0d4-70b0-49cc-b4c2-59a751ea85ea",
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 40,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        -48
+      ],
+      "id": "c62875f7-de89-4b36-9e06-b9b19c409a7b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9d93159f-5472-463e-a6d9-a7137c966858",
+              "leftValue": "={{ $json.valide }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3628260e-30cb-4a41-9049-13449c931352",
+              "leftValue": "={{ $json.valide }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        -48
+      ],
+      "id": "77388f89-fdb0-4d8e-ba17-77aca320b5d4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Failed to validate data:\n\n{{ $json.erreurs.toJsonString() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        368,
+        -192
+      ],
+      "id": "dfd39119-e54d-4325-99bb-a764a2ba2a6c",
+      "name": "Error response"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Success",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        368,
+        -32
+      ],
+      "id": "f5d21789-8731-4dbe-aa59-c48d4bc594ea",
+      "name": "Success response"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const candidature = $input.item.json;\n\nconst id = 'CAND-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();\n\nconst dateReception = new Date();\nlet delaiTraitement = 0;\nswitch(candidature.categorie) {\n  case 'Candidat prioritaire':\n    delaiTraitement = 2;\n    break;\n  case 'Candidat à évaluer':\n    delaiTraitement = 5;\n    break;\n  default:\n    delaiTraitement = 10;\n}\nreturn {\n  json: {\n    ...candidature,\n    candidature_id: id,\n    date_reception: dateReception.toISOString(),\n    delai_traitement_jours: delaiTraitement,\n    date_traitement_limite: new Date(dateReception.getTime() + delaiTraitement * 24 * 60 * 60 * 1000).toISOString(),\n    status: 'en attente' \n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -32
+      ],
+      "id": "b58a5b8f-1744-49eb-9d1a-b13270cba000",
+      "name": "Enrichissement"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag",
+          "mode": "list",
+          "cachedResultName": "n8n_tp7",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "candidature_id": "={{ $json.candidature_id }}",
+            "prenom": "={{ $json.date_reception }}",
+            "telephone": "={{ $json.delai_traitement_jours }}",
+            "poste_souhaite": "={{ $json.date_traitement_limite }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidature_id",
+              "displayName": "candidature_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_reception",
+              "displayName": "date_reception",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nom",
+              "displayName": "nom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "prenom",
+              "displayName": "prenom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "telephone",
+              "displayName": "telephone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "poste_souhaite",
+              "displayName": "poste_souhaite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "annees_experience",
+              "displayName": "annees_experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cv_url",
+              "displayName": "cv_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lettre_motivation",
+              "displayName": "lettre_motivation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "delai_traitement_jours",
+              "displayName": "delai_traitement_jours",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_traitement_limite",
+              "displayName": "date_traitement_limite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        -32
+      ],
+      "id": "e2f93806-108d-4fe3-9d2f-17f99abe009a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HhjCkf7BHHWe3kqA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag",
+          "mode": "list",
+          "cachedResultName": "n8n_tp7",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Feuille 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xYIvmcX1lkTkRskWpm10lVyzDNHbxBW3jQI5QwjPlag/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        -32
+      ],
+      "id": "c05c3765-f5e1-4783-adac-84e35d4cb2bd",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HhjCkf7BHHWe3kqA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "score"
+            },
+            {
+              "fieldToAggregate": "categorie"
+            },
+            {
+              "fieldToAggregate": "annees_experience"
+            },
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        -32
+      ],
+      "id": "0d81436d-47c5-4245-91b7-c692656b210d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $input.item.json\nconst stats = {\n  total_candidatures: data.score.length,\n  \n  score_moyen: Math.round(data.score.reduce((a, b) => a + b, 0) / data.score.length * 10) / 10,\n  experience_moyenne: data.annees_experience.reduce((a, b) => a + b, 0) / data.annees_experience.length,\n  \n  score_min: Math.min(...data.score),\n  score_max: Math.max(...data.score),\n  \n  repartition_categories: {},\n  \n  scores_par_categorie: {}\n};\n\ndata.categorie.forEach(cat => {\n  stats.repartition_categories[cat] = (stats.repartition_categories[cat] || 0) + 1;\n});\n\ndata.categorie.forEach((cat, index) => {\n  if (!stats.scores_par_categorie[cat]) {\n    stats.scores_par_categorie[cat] = [];\n  }\n  stats.scores_par_categorie[cat].push(data.score[index]);\n});\n\nreturn {\n  json: stats\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        -32
+      ],
+      "id": "cdb281a4-64b6-4171-ac10-1d531f7259fa",
+      "name": "stats"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scoring": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Enrichissement",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enrichissement",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enrichissement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Error response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success response": {
+      "main": [
+        [
+          {
+            "node": "scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrichissement": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "79235c9a-e32d-430c-bd1c-4fc11d9ec274",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "6KpQqf0wLSoOwNC2",
+  "tags": []
+}

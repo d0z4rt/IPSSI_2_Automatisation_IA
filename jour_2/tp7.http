@@ -1,0 +1,13 @@
+POST https://mxcmaxime.app.n8n.cloud/webhook-test/candidatures
+Content-Type: application/json
+
+{
+"nom": "Durand",
+"prenom": "Marie",
+"email": "marie.durand@example.com",
+"telephone": "0612345678",
+"poste_souhaite": "Développeur Full Stack",
+"annees_experience": 7,
+"cv_url": "https://example.com/cv/marie-durand.pdf",
+"lettre_motivation": "Je suis passionnée par le développement..."
+}
