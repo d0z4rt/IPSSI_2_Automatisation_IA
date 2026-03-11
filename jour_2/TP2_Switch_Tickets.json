@@ -1,0 +1,529 @@
+{
+  "name": "TP2_Switch_Tickets",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        144
+      ],
+      "id": "7bac3248-1bd9-472d-80e4-e49402772481",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"tickets\": [\n{\"id\": \"T001\", \"priorite\": \"urgent\", \"categorie\": \"technique\",\n\"sujet\": \"Serveur down\"},\n{\"id\": \"T002\", \"priorite\": \"normal\", \"categorie\": \"commercial\",\n\"sujet\": \"Demande devis\"},\n{\"id\": \"T003\", \"priorite\": \"urgent\", \"categorie\": \"facturation\",\n\"sujet\": \"Erreur paiement\"},\n{\"id\": \"T004\", \"priorite\": \"bas\", \"categorie\": \"technique\",\n\"sujet\": \"Question documentation\"},\n{\"id\": \"T005\", \"priorite\": \"normal\", \"categorie\": \"technique\",\n\"sujet\": \"Bug mineur interface\"},\n  {\"id\": \"T006\", \"priorite\": \"bas\", \"categorie\": \"technique\",\n\"sujet\": \"Serveur down\"},\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        144
+      ],
+      "id": "536a3768-9c9a-465d-9afe-6c800f7e1350",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tickets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        144
+      ],
+      "id": "64f03291-a35e-4244-b052-539e6ead18b5",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priorite === \"urgent\" }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "6505da81-8043-486f-9354-de64cd3bd1c6"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "834aa4af-44c8-4249-ba2e-3a4eee919740",
+                    "leftValue": "={{ $json.priorite === \"normal\" }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a392f8f9-4f20-447c-a0b2-a5529174efd0",
+                    "leftValue": "={{ $json.priorite === \"bas\" }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        128
+      ],
+      "id": "eae63c2e-c8cc-4416-a0c0-e54531d6d1a8",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a78a498b-24e6-496d-bc27-304ea9c2cda3",
+              "name": "delai_traitement",
+              "value": "2 heures",
+              "type": "string"
+            },
+            {
+              "id": "aefd1ee1-cfd2-4a82-9f94-8b1738e5b214",
+              "name": "equipe",
+              "value": "Support Niveau 3",
+              "type": "string"
+            },
+            {
+              "id": "52b21c19-6d7a-495c-add5-73e4784e010d",
+              "name": "notification",
+              "value": "SMS + Email + Slack",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -144
+      ],
+      "id": "5fa48251-ee45-4dfb-a7db-f89d58ba0b7d",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a78a498b-24e6-496d-bc27-304ea9c2cda3",
+              "name": "delai_traitement",
+              "value": "24 heures",
+              "type": "string"
+            },
+            {
+              "id": "aefd1ee1-cfd2-4a82-9f94-8b1738e5b214",
+              "name": "equipe",
+              "value": "Support Niveau 2",
+              "type": "string"
+            },
+            {
+              "id": "52b21c19-6d7a-495c-add5-73e4784e010d",
+              "name": "notification",
+              "value": "Email",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "50026668-64f0-4378-9c76-d73ba1e22977",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a78a498b-24e6-496d-bc27-304ea9c2cda3",
+              "name": "delai_traitement",
+              "value": "72 heures",
+              "type": "string"
+            },
+            {
+              "id": "aefd1ee1-cfd2-4a82-9f94-8b1738e5b214",
+              "name": "equipe",
+              "value": "Support Niveau 1",
+              "type": "string"
+            },
+            {
+              "id": "52b21c19-6d7a-495c-add5-73e4784e010d",
+              "name": "notification",
+              "value": "Email automatique",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        336
+      ],
+      "id": "39b44957-be86-45a1-89a7-1fcab8956470",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "491cc50c-3183-4cc1-abff-558a4849f086",
+              "leftValue": "={{ $json.categorie === \"technique\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        -144
+      ],
+      "id": "55bc2297-b857-4c3d-b585-0d3cef071993",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9877725e-183e-4b04-8878-92e372de8a45",
+              "name": "escalade",
+              "value": "CTO notifié",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -240
+      ],
+      "id": "4a2ff617-84af-48d9-a26c-17dc51e5df3d",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9877725e-183e-4b04-8878-92e372de8a45",
+              "name": "escalade",
+              "value": "Manager commercial notifié",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -48
+      ],
+      "id": "39300c36-cddc-44d0-bd1e-2e4785b15a50",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1568,
+        16
+      ],
+      "id": "e3f2d667-c3e5-4cde-b490-40912727d515",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const priorityItemCount = []\nfor (const item of $input.all()) {\n  const data = item.json\n  let prevPriorityIndex = priorityItemCount.findIndex(p => p.name === data.priorite)\n  if (prevPriorityIndex === -1) {\n    const nextPriority = {\n      name: data.priorite,\n      count: 1\n    }\n\n    priorityItemCount.push(nextPriority)\n    continue\n  }\n const prevPriority = priorityItemCount[prevPriorityIndex]\n  priorityItemCount[prevPriorityIndex]= {...prevPriority, count: prevPriority.count + 1 }\n}\n\nreturn priorityItemCount;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        48
+      ],
+      "id": "bf73d35d-9cfb-4f65-8491-11625a1d4440",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const priorities = [\"bas\", \"moyen\", \"urgent\"]\nconst subject = $input.item.json.sujet\nconst regex = /down|urgent|panne/\nif (regex.test(subject)) {\n  const prevPriorityIndex = priorities.findIndex(p => p === $input.item.json.priorite)\n  const nextPriorityIndex = prevPriorityIndex + 1\n  const nextPriority = nextPriorityIndex < priorities.length - 1 ? priorities[nextPriorityIndex] : priorities[prevPriorityIndex]\n  $input.item.json.priorite = nextPriority\n}\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        144
+      ],
+      "id": "5f6936aa-8ece-44b9-a87b-f9cee40c6acd",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "55731373-cf2f-4a89-b04c-43c1bd225528",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "sqCP90dkydBXFzhB",
+  "tags": []
+}

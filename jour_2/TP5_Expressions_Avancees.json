@@ -1,0 +1,416 @@
+{
+  "name": "TP5_Expressions_Avancees",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "f46b94d2-660a-44ad-94b2-363b183ea36a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"contacts\": [\n{\n\"nom\": \" DUPONT \",\n\"prenom\": \"jean-pierre\",\n\"email\": \"Jean.Dupont@EXAMPLE.COM\",\n\"telephone\": \"06 12 34 56 78\",\n\"date_naissance\": \"1990-05-15\",\n\"salaire_annuel\": \"45000\"\n},\n{\n\"nom\": \"martin\",\n\"prenom\": \"SOPHIE\",\n\"email\": \"sophie.martin@company.fr\",\n\"telephone\": \"+33612345678\",\n\"date_naissance\": \"1985-12-03\",\n\"salaire_annuel\": \"52000\"\n}\n]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "5ef1c28e-732c-4c7f-a51d-5b67e55c9ee7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "contacts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "62bb3848-c62e-43ff-8eff-8d858f37dddc",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcd1af67-73af-4c2e-8dcd-a4f5ef0428db",
+              "name": "nom_formate",
+              "value": "={{ $json.nom.trim().toUpperCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "115ceabf-eec6-4d27-9af4-6f907bcde76e",
+              "name": "prenom_formate",
+              "value": "={{ $json.prenom.trim().toLowerCase().split('- ').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('-') }}",
+              "type": "string"
+            },
+            {
+              "id": "46c7ab09-031b-4692-8c4e-69dcbc06d4da",
+              "name": "email_normalise",
+              "value": "={{ $json.email.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "a152b730-4a09-4454-8f0b-043edcd80a38",
+              "name": "telephone_formate",
+              "value": "={{ $json.telephone.replace(/[\\s+]/g, '').replace(/^0/, '+33') }}",
+              "type": "string"
+            },
+            {
+              "id": "b90a2aa3-5799-4cd4-8d51-c5bae2d2d61a",
+              "name": "age",
+              "value": "={{ $now.diffTo($json.date_naissance, 'years') }}",
+              "type": "string"
+            },
+            {
+              "id": "abf13d9e-dafd-461d-9512-c71a390fc4b9",
+              "name": "salaire_mensuel",
+              "value": "={{ Math.round(Number($json.salaire_annuel) / 12) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "efbab0ed-d1fd-4199-b3f0-c4acfc86121e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $input.item.json;\nconst initiales = data.prenom_formate.charAt(0) +\ndata.nom_formate.charAt(0);\nconst timestamp = Date.now().toString().slice(-6);\nconst id_unique = `${initiales}-${timestamp}`;\n\n// Validation email avec regex\nconst emailValide = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(data.email_normalise);\n\nreturn {\njson: {\nid_unique: id_unique,\nnom_complet: `${data.prenom_formate} ${data.nom_formate}`,\nemail: data.email_normalise,\nemail_valide: emailValide ? \"Oui\" : \"Non\",\ntelephone: data.telephone_formate,\nage: data.age,\nsalaire_mensuel: `${data.salaire_mensuel}€`,\ndate_creation_fiche: new Date().toISOString()\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -16
+      ],
+      "id": "94010dda-5c7a-441d-a28f-9ff558707a55",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.age < 30 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "1e52a73d-5707-41a5-aa1c-5fccf9a35a9e"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "aa91ac0e-47bf-48c2-8c3a-0348db670dc2",
+                    "leftValue": "={{ $json.age >= 30 && $json.age < 45 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "18c03c88-c764-4695-a240-1ce33205af80",
+                    "leftValue": "={{ $json.age >= 45 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        -32
+      ],
+      "id": "82398a03-fa80-4e5b-b8bb-97dd0da181c2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fbd93584-efb2-4683-aab3-5b60fae3ed73",
+              "name": "categorie_age",
+              "value": "Junior",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -208
+      ],
+      "id": "f386814f-f92d-4fe9-9807-e49e6495c811",
+      "name": "Junior"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fbd93584-efb2-4683-aab3-5b60fae3ed73",
+              "name": "categorie_age",
+              "value": "Senior",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -16
+      ],
+      "id": "8e9e8358-1947-4098-b408-686f8b354afe",
+      "name": "Senior"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fbd93584-efb2-4683-aab3-5b60fae3ed73",
+              "name": "categorie_age",
+              "value": "Expert",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        176
+      ],
+      "id": "39bf485b-34a1-4f38-bf32-66101c5eeb22",
+      "name": "Expert"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1600,
+        -32
+      ],
+      "id": "5cc7d49d-8486-4442-9320-4b403697c6a0",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Junior",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Senior",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Senior": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Junior": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expert": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c172cb90-84e5-4f57-b70c-faf11e763f30",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "IyHibcolViursmfr",
+  "tags": []
+}

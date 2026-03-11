@@ -1,0 +1,258 @@
+{
+  "name": "TP3_Loop_Enrichissement",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "43918d3a-14f6-4944-9e1b-2353db6981ca",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"utilisateurs\": [\n{\"id\": 1, \"username\": \"alice\"},\n{\"id\": 2, \"username\": \"bob\"},\n{\"id\": 3, \"username\": \"charlie\"},\n{\"id\": 4, \"username\": \"charjvirjenvinepvqlie\"}\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e2f377cc-d6ea-4a83-9e8d-5ff24e5eff6d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "utilisateurs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "0bf7efca-c0a7-4535-8f18-22b96d514dbb",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/users/{{ $json.username }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        512,
+        -16
+      ],
+      "id": "30adcd82-f733-4895-acaa-045cd14f39f3",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"id_original\" : \"{{ $('Split Out').item.json.id }}\",\n\"username\" : \"{{ $json.login }}\",\n\"nom_complet\" : \"{{ $json.name }}\",\n\"bio\" : \"{{ $json.bio }}\",\n\"repos_publics\" : \"{{ $json.public_repos }}\",\n\"followers\" : \"{{ $json.followers }}\",\n\"date_creation\" : \"{{ $json.created_at }}\", \"startTime\": \"{{ $('add startTime').item.json.startTime }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        -128
+      ],
+      "id": "879581f4-bfdf-4594-b5a2-da15998d2957",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(item => item.json);\nitems.sort((a, b) => b.score_activite - a.score_activite);\nreturn items.map((item, index) => ({\n  json: {\nclassement: index + 1,\n...item\n}\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -128
+      ],
+      "id": "5c90120e-c1aa-4534-80f6-ceba02ecb125",
+      "name": "Sort by score"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $input.item.json;\nconst score = (data.repos_publics * 2) + (data.followers * 0.5);\nconst niveau = score > 100 ? \"Expert\" :\nscore > 50 ? \"Intermédiaire\" :\n\"Débutant\";\nreturn {\njson: {\n...data,\nscore_activite: Math.round(score),\nniveau_activite: niveau\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "2980a4ba-f420-4c87-a54b-1eecbfcc69cb",
+      "name": "Calculate Score"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d087ae6-4c83-44bc-85fc-78b2a3e22888",
+              "name": "=startTime",
+              "value": "={{ $now.toMillis() }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        -16
+      ],
+      "id": "8e3a6e38-8918-49eb-a1e4-695eae743655",
+      "name": "add startTime"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5c3ee8d-a590-46af-8759-b1bd097ce4ee",
+              "name": "execTime",
+              "value": "={{ ($now.toMillis() - $json.startTime) / 1000 }} seconds",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -128
+      ],
+      "id": "543eb41c-8999-42ed-94dc-3e1194cf9e50",
+      "name": "Calculate execution time"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "add startTime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Calculate Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Score": {
+      "main": [
+        [
+          {
+            "node": "Sort by score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by score": {
+      "main": [
+        [
+          {
+            "node": "Calculate execution time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add startTime": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate execution time": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a9da9fc8-fdd4-4daf-8a3a-bd01c0b947e1",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "NfkHvJ9lLYLOKzii",
+  "tags": []
+}

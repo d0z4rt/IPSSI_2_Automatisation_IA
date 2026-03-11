@@ -1,0 +1,286 @@
+{
+  "name": "TP4_Gestion_Erreurs",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "1e71ed96-f1a6-4657-8e3e-9b6cb735246b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"urls\": [\n{\"nom\": \"API valide\", \"url\": \"https://api.github.com/zen\"},\n{\"nom\": \"API lente\", \"url\": \"https://httpbin.org/delay/2\"},\n{\"nom\": \"API erreur 404\", \"url\":\n\"https://httpbin.org/status/404\"},\n{\"nom\": \"API erreur 500\", \"url\":\n\"https://httpbin.org/status/500\"},\n{\"nom\": \"URL invalide\", \"url\": \"https://site-inexistant-xyz123.com/api\"}\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -80
+      ],
+      "id": "4f3ff29b-736b-421e-adf0-47a409655b82",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "398a3eeb-a85a-43a9-abb6-4801302e4d89",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        -80
+      ],
+      "id": "5b1d7651-9260-46b7-953f-0f719501f6c9",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2777d7b0-7bc8-49b1-9753-bad8ebc504f1",
+              "leftValue": "={{ $json.error === undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "8756c3ff-2440-4aca-ad5a-14593c932e99",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"nom_api\" : \"{{ $('Split Out').item.json.nom }}\",\n\"url\" : \"{{ $('Split Out').item.json.url }}\",\n\"status\" : \"success\",\n\"code_http\" : \"{{ $json.statusCode || 200 }}\",\n\"temps_reponse \": \"< 5s\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -176
+      ],
+      "id": "53f624aa-f005-413c-b848-7f69fd0c096b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"nom_api\" : \"{{ $('Split Out').item.json.nom }}\",\n\"url\" : \"{{ $('Split Out').item.json.url }}\",\n\"status\" : \"error\",\n\"message_erreur\" : {{ $json.error.toJsonString() }},\n\"tentatives\" : 3\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        16
+      ],
+      "id": "e7584ceb-11b6-434d-b10f-4766b1ae57c9",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const errorData = $input.item.json;\nconst logEntry = {\nstatus: errorData.status,\ntimestamp: new Date().toISOString(),\nniveau: \"ERROR\",\napi: errorData.nom_api,\nurl: errorData.url,\nerreur: errorData.message_erreur,\naction: \"Notification équipe DevOps requise\"\n};\nconsole.log(\"ERREUR API:\", JSON.stringify(logEntry, null, 2));\nreturn { json: logEntry };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        16
+      ],
+      "id": "e746987b-2e72-4458-8db3-56930b4fb427",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1568,
+        -80
+      ],
+      "id": "c8e6f014-d27d-481c-9aae-0363902f7a6f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst successes = items.filter(item => item.json.status === \"success\").length;\nconst errors = items.filter(item => item.json.status === \"error\").length;\nreturn {\njson: {\ntotal_apis_testees: items.length,\nreussites: successes,\nechecs: errors,\ntaux_disponibilite: `${((successes / items.length) * 100).toFixed(1)}%`,\ntimestamp_rapport: new Date().toISOString(),\ndetails: items.map(item => item.json)\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -80
+      ],
+      "id": "2d2890a3-d730-47c2-90f5-27e2f139518c",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b93c5a8e-a3b9-4ba6-9b23-2ad4b390a942",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "clF1eGvuABZk1fKf",
+  "tags": []
+}

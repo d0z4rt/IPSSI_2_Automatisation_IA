@@ -1,0 +1,309 @@
+{
+  "name": "TP1_Manipulation_JSON",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e8cf0bdd-e445-4ebb-a858-65e98fed53ae",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"commandes\": [\n{\n\"id\": \"CMD001\",\n\"client\": \"Entreprise Alpha\",\n\"montant_ht\": 1200,\n\"tva\": 20,\n\"articles\": [\"Laptop\", \"Souris\", \"Clavier\"],\n\"date\": \"2026-03-01\"\n},\n{\n\"id\": \"CMD002\",\n\"client\": \"Entreprise Beta\",\n\"montant_ht\": 800,\n\"tva\": 20,\n\"articles\": [\"Écran\", \"Webcam\"],\n\"date\": \"2026-03-05\"\n},\n{\n\"id\": \"CMD003\",\n\"client\": \"Entreprise Gamma\",\n\"montant_ht\": 2500,\n\"tva\": 20,\n\"articles\": [\"Serveur\", \"Switch\", \"Câbles\"],\n\"date\": \"2026-03-07\"\n}\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        0
+      ],
+      "id": "6f3b7452-c514-42de-a7f6-eed77f9124d5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "commandes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "6e5118dc-46f6-47c1-976c-dde31766b55f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\nconst montant_ttc = item.montant_ht * (1 + item.tva / 100);\nconst nombre_articles = item.articles.length;\nreturn {\njson: {\n...item,\nmontant_ttc: montant_ttc,\nnombre_articles: nombre_articles,\nmontant_moyen_article: (montant_ttc / nombre_articles).toFixed(2)\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "f83c6f8a-676a-46a4-adf2-030b8be91593",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30cc508f-8035-42e1-90bc-2df345c0b68e",
+              "leftValue": "={{ $json.montant_ttc >= 1500 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "c29a6868-0faf-4d56-bb47-f84e3e5c2b9d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2980a6bc-571b-4ed2-a113-47862ee74502",
+              "name": "categorie",
+              "value": "Commande importante",
+              "type": "string"
+            },
+            {
+              "id": "2450883a-9a96-4d61-98e5-856b366ca998",
+              "name": "priorite",
+              "value": "Haute",
+              "type": "string"
+            },
+            {
+              "id": "f6215d23-a858-40c8-a994-740e7f306c13",
+              "name": "action",
+              "value": "Validation manager requise",
+              "type": "string"
+            },
+            {
+              "id": "16823bef-021a-41ff-921d-810b8906b3f8",
+              "name": "montant_ttc",
+              "value": "={{ $json.montant_ttc }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        -80
+      ],
+      "id": "10d9f501-50e9-430f-97a1-77ff5bc573f7",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2980a6bc-571b-4ed2-a113-47862ee74502",
+              "name": "categorie",
+              "value": "Commande standard",
+              "type": "string"
+            },
+            {
+              "id": "2450883a-9a96-4d61-98e5-856b366ca998",
+              "name": "priorite",
+              "value": "Normale",
+              "type": "string"
+            },
+            {
+              "id": "f6215d23-a858-40c8-a994-740e7f306c13",
+              "name": "action",
+              "value": "Traitement automatique",
+              "type": "string"
+            },
+            {
+              "id": "c916afef-1998-4041-99f4-b78ffd83aa5b",
+              "name": "montant_ttc",
+              "value": "={{ $json.montant_ttc }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        64
+      ],
+      "id": "573fdbd7-4f54-423d-ae0d-2b0c6bd977cf",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "c1245be9-040e-4241-9463-27e7ee5994bf",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total_ttc = items.reduce((sum, item) => sum + item.json.montant_ttc, 0);\nconst commandes_importantes = items.filter(item => item.json.priorite === \"Haute\").length;\nreturn {\njson: {\nnombre_commandes: items.length,\nmontant_total_ttc: total_ttc.toFixed(2),\ncommandes_importantes: commandes_importantes,\ncommandes_standard: items.length - commandes_importantes,\nmontant_moyen: (total_ttc / items.length).toFixed(2)\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "35b1781a-9ab0-481a-a6ba-4797054c5f46",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8ab162c1-4403-47c3-aa6e-4c3ad6298d95",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "oPSSHX6t4K1YzLfn",
+  "tags": []
+}
