@@ -1,0 +1,356 @@
+{
+  "name": "TP6_Merge_Donnees",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "861793d7-29c5-4d06-b3e6-243eed938278",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"commandes\": [\n{\"commande_id\": \"CMD001\", \"client_id\": \"C001\", \"montant\": 12000,\n\"date\": \"2026-03-01\"},\n{\"commande_id\": \"CMD002\", \"client_id\": \"C001\", \"montant\": 8000,\n\"date\": \"2026-03-05\"},\n{\"commande_id\": \"CMD003\", \"client_id\": \"C002\", \"montant\": 15000,\n\"date\": \"2026-03-03\"},\n{\"commande_id\": \"CMD004\", \"client_id\": \"C003\", \"montant\": 25000,\n\"date\": \"2026-03-07\"},\n{\"commande_id\": \"CMD005\", \"client_id\": \"C003\", \"montant\": 18000,\n\"date\": \"2026-03-08\"}\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        64
+      ],
+      "id": "49a39046-101e-4ea1-89d6-111085bc3239",
+      "name": "commands"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"clients\": [\n{\"client_id\": \"C001\", \"nom\": \"Entreprise Alpha\", \"secteur\":\n\"Tech\", \"ca_annuel\": 500000},\n{\"client_id\": \"C002\", \"nom\": \"Entreprise Beta\", \"secteur\":\n\"Retail\", \"ca_annuel\": 300000},\n{\"client_id\": \"C003\", \"nom\": \"Entreprise Gamma\", \"secteur\": \"Finance\", \"ca_annuel\": 800000}\n]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        -80
+      ],
+      "id": "1473f1dd-18da-43b9-b7bb-b09502fa6656",
+      "name": "clients"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "clients",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -80
+      ],
+      "id": "58feab08-2614-41c8-a0d9-d7559979ae03",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "commandes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        384,
+        64
+      ],
+      "id": "5156dad1-d04f-402e-ba67-a5698429d0f2",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "client_id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        0
+      ],
+      "id": "814b3cae-fc1a-4e37-a9bb-5a11ae161b0b",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const clientStats = []\n\nfor (const item of $input.all()) {\n  const current = item.json\n  let prevClientIndex = clientStats.findIndex(c => c.client_id === current.client_id)\n  if (prevClientIndex === -1) {\n    clientStats.push({client_id: current.client_id, ca_annuel: current.ca_annuel, nom: current.nom, secteur: current.secteur, nombre_commandes: current.commande_id ? 1 : 0, total_commandes: current.montant || 0 })\n    continue\n  }\n  \n  clientStats[prevClientIndex] = {\n    ...clientStats[prevClientIndex],\n    nombre_commandes: clientStats[prevClientIndex].nombre_commandes + 1,\n    total_commandes: clientStats[prevClientIndex].total_commandes + current.montant \n  }\n}\n\nreturn clientStats.map(c => {\n  const panierMoyen = c.nombre_commandes > 0 ? c.total_commandes / c.nombre_commandes  : 0;\n\n  return {\n    json: {...c,\n    panier_moyen: Math.round(panierMoyen),\n    taux_conversion: `${((c.total_commandes / c.ca_annuel) * 100).toFixed(2)}%`}\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        0
+      ],
+      "id": "1c2714cb-5709-4ec8-83a2-b69ccb8501e0",
+      "name": "clientStats"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "80f81192-446a-46fe-811a-8c9dc6d067ed",
+              "leftValue": "={{ $json.total_commandes > 15000 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "f3d917ff-d6da-4c4b-aa6f-3f0049b4482c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a65f533e-0ca1-4ad2-96e0-685a0095e076",
+              "name": "badge",
+              "value": "Client Premium",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        -112
+      ],
+      "id": "081a778b-2e88-48f3-b7e2-ee451f9643b9",
+      "name": "badge premium"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a65f533e-0ca1-4ad2-96e0-685a0095e076",
+              "name": "badge",
+              "value": "Client Standard",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        48
+      ],
+      "id": "08f42998-1a0e-442d-aa4e-2710e62e8de6",
+      "name": "badge standard"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1520,
+        -32
+      ],
+      "id": "4ab91838-0146-40c1-9ad1-27af5e18016d",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(item => item.json);\nconst totalCA = items.reduce((sum, item) => sum + item.total_commandes, 0);\nconst clientsPremium = items.filter(item => item.total_commandes > 15000).length;\nreturn {\njson: {\ndate_rapport: new Date().toISOString(),\nnombre_clients: items.length,\nclients_premium: clientsPremium,\nchiffre_affaires_total: totalCA,\npanier_moyen_global: Math.round(totalCA / items.reduce((sum, item) => sum + item.nombre_commandes, 0)),\ndetails_clients: items\n}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -32
+      ],
+      "id": "a92e0fbb-3cd5-4f46-b9b2-449635227d2b",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "commands",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "commands": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clients": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "clientStats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clientStats": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "badge premium",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "badge standard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "badge premium": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "badge standard": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "24ac0ac3-118f-4c6e-b2df-a7f06891ea6f",
+  "meta": {
+    "instanceId": "01e07e97899009d3df9d9b849c14666aa7b0dd9ff78531db274b907b1e7362a1"
+  },
+  "id": "hRYIHxky0N83XIXD",
+  "tags": []
+}
